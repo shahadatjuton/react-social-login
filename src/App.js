@@ -4,6 +4,8 @@ import {
   getAuth,
   GithubAuthProvider,
   GoogleAuthProvider,
+  sendEmailVerification,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
 } from "firebase/auth";
@@ -67,9 +69,7 @@ function App() {
       setUser(loggedUser);
     });
   };
-  // ===============================================================================
-  //                            Registration
-  // ===============================================================================
+
   const handleEmail = (e) => {
     setEmail(e.target.value);
   };
@@ -79,25 +79,54 @@ function App() {
   const isRegister=e=>{
     setRegistered(e.target.checked);
   }
-  const handleRegistration = (e) => {
-    e.preventDefault();
-    console.log('register');
+  // ===============================================================================
+  //                            Registration
+  // ===============================================================================
+ 
+  const handleRegistration = (email,password) => {
+
     createUserWithEmailAndPassword(auth, email, password).then((result) => {
       const user = result.user;
+      setUser(user);
+      emailVerification();
       console.log(user);
     });
   };
   // ===============================================================================
   //                            Log In
   // ===============================================================================
-  const handleLogIn = e=>{
-    e.preventDefault();
+  const handleLogIn = (email, password)=>{
+    
     signInWithEmailAndPassword(auth,email,password)
     .then((result)=>{
       const user = result.user;
+      setUser(user);
       console.log(user);
+
     })
   }
+
+  const handleAuthentication = e=>{
+    e.preventDefault();
+    registered ? handleLogIn(email, password) : handleRegistration(email, password);
+  }
+  // ===============================================================================
+  //                            Email Verify
+  // ===============================================================================
+
+const emailVerification = ()=>{
+  sendEmailVerification(auth.currentUser)
+  .then(result=>{
+    console.log(result);
+  })
+}
+const handlepPasswordReset= ()=>{
+  console.log('ok');
+  sendPasswordResetEmail(auth,email)
+  .then(result=>{
+    console.log(result);
+  })
+}
 
   return (
     <div className="App">
@@ -107,7 +136,7 @@ function App() {
         <button onClick={handleFacebookLogin}>Facebook LogIn </button>
       </div>
       <div className="registration-form">
-        <form onSubmit={handleLogIn}>
+        <form onSubmit={handleAuthentication}>
           <div className="form-group">
             <label htmlFor="exampleInputEmail1">Email address</label>
             <input
@@ -142,6 +171,9 @@ function App() {
           </div>
           <button type="submit" className="btn btn-primary">
             {!registered ? 'Register' : 'Log In'}
+          </button>
+          <button type="submit" className="btn btn-primary ml-4" onClick={handlepPasswordReset}>
+            Password Reset
           </button>
         </form>
       </div>
